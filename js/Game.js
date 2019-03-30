@@ -1,7 +1,13 @@
 var TopDownGame = TopDownGame || {};
 
+var endPositionX;
+var endPositionY;
+var timer;
+
 //title screen
 TopDownGame.Game = function(){};
+
+
 
 TopDownGame.Game.prototype = {
   create: function() {
@@ -26,7 +32,8 @@ TopDownGame.Game.prototype = {
     //create player
     var result = this.findObjectsByType('playerStart', this.map, 'objectsLayer')
     this.player = this.game.add.sprite(result[0].x, result[0].y, 'player');
-    this.player.animations.add('idle', [0, 1, 2, 3], 5, true);
+    this.player.animations.add('walking', [0, 1, 2, 3], 5, true);
+    this.player.animations.add('idle', [0], 5, true);
     this.player.animations.play('idle');
     this.game.physics.arcade.enable(this.player);
 
@@ -35,6 +42,9 @@ TopDownGame.Game.prototype = {
 
     //move player with cursor keys
     this.cursors = this.game.input.keyboard.createCursorKeys();
+
+    //Make timer
+    timer = this.game.time.create(false);
 
   },
   createItems: function() {
@@ -89,10 +99,22 @@ TopDownGame.Game.prototype = {
 
     //player movement
     if(this.game.input.activePointer.justPressed()) {
-      
+      this.player.animations.play("walking");
       //move on the direction of the input
-      this.game.physics.arcade.moveToPointer(this.player, this.playerSpeed);
-    }/*
+      endPositionX = this.game.input.mousePointer.x;
+      endPositionY = this.game.input.mousePointer.y;
+      var spritePositionX = this.player.x;
+      var spritePositionY = this.player.y;
+      //Grid is 64x64 pixels
+      //Calculate time it takes with players velocity to move 1 unit
+      var timeToFinish = calculatePath(spritePositionX,spritePositionY,this.map);
+      this.game.physics.arcade.moveToXY(this.player,endPositionX,endPositionY,0,timeToFinish);
+      timer.loop(5000,stopPlayer,this);
+      timer.start();
+      //this.game.physics.arcade.moveToPointer(this.player, this.playerSpeed);
+    }
+
+    /*
     this.player.body.velocity.x = 0;
 
     if(this.cursors.up.isDown) {
@@ -123,4 +145,27 @@ TopDownGame.Game.prototype = {
   enterDoor: function(player, door) {
     console.log('entering door that will take you to '+door.targetTilemap+' on x:'+door.targetX+' and y:'+door.targetY);
   },
+
 };
+
+function stopPlayer(){
+  this.player.body.velocity.x = 0;
+  this.player.body.velocity.y = 0;
+  this.player.animations.play("idle");
+  timer.stop();
+}
+/*
+  This method will implement a* pathfinding to compute the path needed to get the end 
+  end destination, and the time it will take using the current velocity for the timer.
+  We will then use the moveTo function with the specified velocity, changing directions
+  every so often
+*/
+function calculatePath(spritePositionX,spritePositionY,map){
+  var tileWidth = map.tileWidth;
+  var tileHeight = map.tileHeight;
+
+
+
+
+  return 5000;
+}
